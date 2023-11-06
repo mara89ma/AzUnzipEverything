@@ -5,7 +5,7 @@
         public static class SupportedExtensions
         {
             public const string Zip = ".zip";
-            public const string Rar = ".gz";
+            public const string Gz = ".gz";
         }
     }
 }
