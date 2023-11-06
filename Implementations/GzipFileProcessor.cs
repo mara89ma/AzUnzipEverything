@@ -1,58 +1,44 @@
-using Azure.Storage.Blobs;
+using AzUnzipEverything.Abstractions;
+using AzUnzipEverything.Infrastructure.Settings;
 using Microsoft.Extensions.Logging;
-using System;
+using Microsoft.WindowsAzure.Storage.Blob;
+using SharpCompress.Archives.GZip;
+using SharpCompress.Common;
+using SharpCompress.Readers;
 using System.IO;
-using System.IO.Compression;
+using System.Text;
 using System.Threading.Tasks;
 
-namespace YourNamespace
+namespace AzUnzipEverything.Implementations
 {
-    public class AzureBlobGZipProcessor
+    public class GZipFileProcessor : FileProcessorBase
     {
-        private readonly BlobServiceClient _blobServiceClient;
-        private readonly ILogger<AzureBlobGZipProcessor> _logger;
+        private readonly SecretSettings _secretSettings;
+        private readonly ILogger<FileProcessorBase> _logger;
 
-        public AzureBlobGZipProcessor(string connectionString, ILogger<AzureBlobGZipProcessor> logger)
+        public GZipFileProcessor(CloudBlobContainer destinationContainer, SecretSettings secretSettings, ILogger<FileProcessorBase> logger) : base(destinationContainer, logger)
         {
-            _blobServiceClient = new BlobServiceClient(connectionString);
+            _secretSettings = secretSettings;
             _logger = logger;
         }
 
-        public async Task ProcessGZipFileFromBlobStorage(string containerName, string blobName)
+        public override async Task ProcessFile(Stream blobStream)
         {
-            BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
-            BlobClient blobClient = containerClient.GetBlobClient(blobName);
-
-            if (await blobClient.ExistsAsync())
+            if (GZipArchive.IsGZipFile(blobStream))
             {
-                _logger.LogInformation($"Blob '{blobName}' exists.");
-
-                // Download the GZip file to a memory stream
-                using (MemoryStream memoryStream = new MemoryStream())
+                var zipReaderOptions = new ReaderOptions()
                 {
-                    await blobClient.DownloadToAsync(memoryStream);
+                    ArchiveEncoding = new ArchiveEncoding(Encoding.UTF8, Encoding.UTF8),
+                    Password = _secretSettings?.ZipPassword,
+                    LookForHeader = true
+                };
 
-                    memoryStream.Seek(0, SeekOrigin.Begin);
+                _logger.LogInformation("Blob is a gzip file; beginning extraction....");
+                blobStream.Position = 0;
 
-                    // Create a GZip stream to decompress the memory stream
-                    using (GZipStream decompressionStream = new GZipStream(memoryStream, CompressionMode.Decompress))
-                    {
-                        // Get the filename without the .gz extension
-                        string fileName = blobName.Substring(0, blobName.Length - 3);
+                using var reader = GZipArchive.Open(blobStream, zipReaderOptions);
 
-                        // Create a BlobClient for the extracted file
-                        BlobClient extractedBlob = containerClient.GetBlobClient(fileName);
-
-                        // Upload the extracted file to Azure Blob Storage
-                        await extractedBlob.UploadAsync(decompressionStream);
-
-                        _logger.LogInformation($"Extracted file '{fileName}' uploaded to the container '{containerName}'.");
-                    }
-                }
-            }
-            else
-            {
-                _logger.LogInformation($"Blob '{blobName}' does not exist.");
+                await ExtractArchiveFiles(reader.Entries);
             }
         }
     }
