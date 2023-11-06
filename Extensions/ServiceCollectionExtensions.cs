@@ -16,7 +16,7 @@ namespace AzUnzipEverything.Extensions
         {
             services.AddSingleton<IFileProcessor, ZipFileProcessor>();
             services.AddSingleton<IFileProcessor, RarFileProcessor>();
-            services.AddSingleton<IFileProcessor, GzipFileProcessor>();
+            services.AddSingleton<IFileProcessor, GZipFileProcessor >();
 
             services.AddSingleton(provider => new Dictionary<string, IFileProcessor>()
             {
