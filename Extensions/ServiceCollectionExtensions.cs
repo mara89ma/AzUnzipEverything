@@ -26,14 +26,14 @@ namespace AzUnzipEverything.Extensions
                         provider.GetService<SecretSettings>(), provider.GetService<ILogger<ZipFileProcessor>>())
                 },
                 {
-                    Constants.SupportedExtensions.rar,
+                    Constants.SupportedExtensions.Rar,
                     new RarFileProcessor(provider.GetService<CloudBlobContainer>(),
                         provider.GetService<SecretSettings>(), provider.GetService<ILogger<RarFileProcessor>>())
                 },
                 {
-                    Constants.SupportedExtensions.gz,
-                    new GzipFileProcessor(provider.GetService<CloudBlobContainer>(),
-                        provider.GetService<SecretSettings>(), provider.GetService<ILogger<GzipFileProcessor>>())
+                    Constants.SupportedExtensions.GZip,
+                    new GZipFileProcessor(provider.GetService<CloudBlobContainer>(),
+                        provider.GetService<SecretSettings>(), provider.GetService<ILogger<GZipFileProcessor>>())
                 }                
             });
         }
