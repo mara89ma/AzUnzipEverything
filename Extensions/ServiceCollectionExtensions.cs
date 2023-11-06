@@ -16,6 +16,7 @@ namespace AzUnzipEverything.Extensions
         {
             services.AddSingleton<IFileProcessor, ZipFileProcessor>();
             services.AddSingleton<IFileProcessor, RarFileProcessor>();
+            services.AddSingleton<IFileProcessor, GzFileProcessor>();
 
             services.AddSingleton(provider => new Dictionary<string, IFileProcessor>()
             {
@@ -25,10 +26,15 @@ namespace AzUnzipEverything.Extensions
                         provider.GetService<SecretSettings>(), provider.GetService<ILogger<ZipFileProcessor>>())
                 },
                 {
-                    Constants.SupportedExtensions.gz,
+                    Constants.SupportedExtensions.rar,
                     new RarFileProcessor(provider.GetService<CloudBlobContainer>(),
                         provider.GetService<SecretSettings>(), provider.GetService<ILogger<RarFileProcessor>>())
-                }
+                },
+                {
+                    Constants.SupportedExtensions.gz,
+                    new GzFileProcessor(provider.GetService<CloudBlobContainer>(),
+                        provider.GetService<SecretSettings>(), provider.GetService<ILogger<GzFileProcessor>>())
+                }                
             });
         }
 
