@@ -2,7 +2,7 @@ using AzUnzipEverything.Abstractions;
 using AzUnzipEverything.Infrastructure.Settings;
 using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage.Blob;
-using SharpCompress.Archives;
+using SharpCompress.Archives.GZip;
 using SharpCompress.Common;
 using System.IO;
 using System.Text;
